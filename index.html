@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>猪人食堂 · 家庭点餐</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --cream: #FFF5F0;
+  --warm-yellow: #FFE8D6;
+  --pink: #FF9E9E;
+  --deep-pink: #FF6B6B;
+  --brown: #B0886A;
+  --dark-brown: #5D3A1A;
+  --soft-pink: #FFD4D4;
+  --white: #FFFFFF;
+  --shadow: 0 4px 16px rgba(93, 58, 26, 0.07);
+  --radius: 20px;
+  --radius-sm: 12px;
+}
+
+body {
+  font-family: 'ZCOOL KuaiLe', 'PingFang SC', 'Microsoft YaHei', cursive, sans-serif;
+  min-height: 100vh;
+  color: var(--dark-brown);
+  padding-bottom: 100px;
+  /* Layered background: base cream + large colored blobs + repeating pig pattern */
+  background-color: #FFF0E8;
+  background-image:
+    /* Large soft blobs */
+    radial-gradient(ellipse 400px 300px at 15% 20%, rgba(255,154,139,0.15) 0%, transparent 100%),
+    radial-gradient(ellipse 350px 400px at 85% 60%, rgba(255,179,71,0.10) 0%, transparent 100%),
+    radial-gradient(ellipse 300px 350px at 50% 90%, rgba(255,130,130,0.10) 0%, transparent 100%),
+    radial-gradient(ellipse 250px 250px at 90% 8%, rgba(255,200,160,0.12) 0%, transparent 100%),
+    radial-gradient(ellipse 200px 300px at 5% 75%, rgba(255,160,140,0.10) 0%, transparent 100%),
+    /* Subtle dot grid */
+    radial-gradient(circle, rgba(255,154,139,0.06) 1px, transparent 1px);
+  background-size:
+    100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%,
+    28px 28px;
+  background-position:
+    0 0, 0 0, 0 0, 0 0, 0 0,
+    0 0;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+}
+
+/* ── Floating Pig Emojis ── */
+.float-emoji {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  font-size: 80px;
+  opacity: 0.10;
+  animation: floatLarge 8s ease-in-out infinite;
+}
+.float-emoji.a { top: 10%; left: 5%;  animation-delay: 0s; }
+.float-emoji.b { top: 6%;  right: 5%; animation-delay: 2.5s; font-size: 100px; }
+.float-emoji.c { bottom: 22%; left: 3%; animation-delay: 5s; font-size: 65px; }
+.float-emoji.d { bottom: 14%; right: 8%; animation-delay: 6.5s; font-size: 75px; }
+
+@keyframes floatLarge {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(8deg); }
+}
+
+/* ── Header ── */
+header {
+  text-align: center;
+  padding: 32px 16px 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.logo {
+  font-size: 90px;
+  display: block;
+  margin: 0 auto;
+  animation: wiggle 2s ease-in-out infinite;
+  filter: drop-shadow(0 3px 6px rgba(255,107,107,0.2));
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-6deg); }
+  60% { transform: rotate(6deg); }
+}
+
+h1 {
+  font-size: 32px;
+  color: var(--deep-pink);
+  margin-top: 0;
+  letter-spacing: 3px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: #C9A890;
+  margin-top: 2px;
+}
+
+.doodle-divider {
+  text-align: center;
+  font-size: 22px;
+  letter-spacing: 6px;
+  margin: 8px 0 16px;
+  position: relative;
+  z-index: 1;
+  opacity: 0.6;
+}
+
+/* ── Category Tabs ── */
+.categories {
+  display: flex;
+  gap: 10px;
+  padding: 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  justify-content: center;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.categories::-webkit-scrollbar { display: none; }
+
+.cat-btn {
+  padding: 8px 18px;
+  border-radius: 50px;
+  border: 2.5px dashed var(--pink);
+  background: var(--white);
+  color: var(--brown);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  letter-spacing: 1px;
+}
+
+.cat-btn.active {
+  background: var(--deep-pink);
+  color: white;
+  border-style: solid;
+  border-color: var(--deep-pink);
+  box-shadow: 0 4px 12px rgba(255,107,107,0.3);
+  transform: scale(1.05);
+}
+
+/* ── Menu Grid ── */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+  padding: 20px 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.dish-card {
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(4px);
+  border-radius: var(--radius);
+  padding: 18px 14px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  border: 2px solid transparent;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.dish-card .has-note-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 10px;
+  height: 10px;
+  background: var(--deep-pink);
+  border-radius: 50%;
+  z-index: 2;
+  display: none;
+}
+
+.dish-card.has-note .has-note-dot { display: block; }
+
+.dish-card::after {
+  content: '';
+  position: absolute;
+  top: -24px;
+  right: -24px;
+  width: 56px;
+  height: 56px;
+  background: var(--warm-yellow);
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.3s;
+}
+
+.dish-card:active::after {
+  opacity: 0.5;
+  transform: scale(4);
+}
+
+.dish-card:active {
+  border-color: var(--deep-pink);
+  transform: scale(0.97);
+}
+
+.dish-emoji {
+  font-size: 52px;
+  display: block;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.dish-name {
+  font-size: 15px;
+  font-weight: bold;
+  color: var(--dark-brown);
+  margin-bottom: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.dish-price {
+  font-size: 18px;
+  color: var(--deep-pink);
+  position: relative;
+  z-index: 1;
+}
+
+.dish-price::before {
+  content: '¥';
+  font-size: 12px;
+}
+
+/* ── Cart ── */
+.cart-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(8px);
+  border-radius: var(--radius) var(--radius) 0 0;
+  box-shadow: 0 -4px 24px rgba(93, 58, 26, 0.1);
+  padding: 14px 20px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.cart-info { flex: 1; }
+
+.cart-title {
+  font-size: 14px;
+  color: var(--brown);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cart-count {
+  background: var(--deep-pink);
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.cart-total {
+  font-size: 22px;
+  font-weight: bold;
+  color: var(--dark-brown);
+}
+
+.checkout-btn {
+  background: var(--deep-pink);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 12px 28px;
+  font-family: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  box-shadow: 0 4px 16px rgba(255,107,107,0.35);
+  transition: all 0.2s;
+}
+
+.checkout-btn:active { transform: scale(0.95); opacity: 0.85; }
+
+.checkout-btn:disabled {
+  background: #E0D5C5;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ── Dish Note Modal ── */
+.dish-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(93, 58, 26, 0.4);
+  z-index: 250;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.dish-modal {
+  background: var(--white);
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 360px;
+  padding: 28px 24px 24px;
+  text-align: center;
+  animation: popIn 0.3s ease-out;
+  box-shadow: 0 12px 48px rgba(93, 58, 26, 0.2);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.dish-modal .big-emoji { font-size: 68px; display: block; margin-bottom: 8px; }
+.dish-modal .big-name { font-size: 20px; color: var(--dark-brown); margin-bottom: 4px; }
+.dish-modal .big-price { font-size: 22px; color: var(--deep-pink); margin-bottom: 16px; }
+
+.dish-modal .note-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px dashed var(--warm-yellow);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 14px;
+  background: var(--cream);
+  color: var(--dark-brown);
+  outline: none;
+  text-align: center;
+  margin-bottom: 20px;
+  transition: border-color 0.2s;
+}
+
+.dish-modal .note-input:focus {
+  border-color: var(--deep-pink);
+  border-style: solid;
+}
+
+.dish-modal .qty-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.dish-modal .qty-btn-lg {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2.5px solid var(--deep-pink);
+  background: transparent;
+  color: var(--deep-pink);
+  font-size: 22px;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.dish-modal .qty-btn-lg:active { background: var(--deep-pink); color: white; }
+.dish-modal .qty-num-lg { font-size: 24px; min-width: 36px; }
+
+.dish-modal .add-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--deep-pink);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-family: inherit;
+  font-size: 18px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  box-shadow: 0 4px 16px rgba(255,107,107,0.3);
+  transition: all 0.2s;
+}
+
+.dish-modal .add-btn:active { transform: scale(0.97); }
+
+.dish-modal .cancel-btn {
+  margin-top: 10px;
+  background: transparent;
+  border: none;
+  color: #C4A882;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* ── Checkout Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(93, 58, 26, 0.4);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.2s;
+}
+
+.modal {
+  background: var(--white);
+  border-radius: var(--radius) var(--radius) 0 0;
+  width: 100%;
+  max-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 24px 20px 32px;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 { font-size: 22px; color: var(--deep-pink); }
+
+.modal-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px dashed var(--brown);
+  background: transparent;
+  font-size: 18px;
+  color: var(--brown);
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 0;
+  border-bottom: 1.5px dashed #F0E0D5;
+  flex-wrap: wrap;
+}
+
+.cart-item-main {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 200px;
+}
+
+.cart-item-note {
+  width: 100%;
+  font-size: 12px;
+  color: var(--pink);
+  padding-left: 44px;
+  padding-bottom: 8px;
+}
+
+.cart-item-name { flex: 1; font-size: 15px; }
+.cart-item-price { color: var(--brown); margin: 0 12px; font-size: 15px; white-space: nowrap; }
+.qty-control { display: flex; align-items: center; gap: 10px; }
+
+.qty-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--deep-pink);
+  background: transparent;
+  color: var(--deep-pink);
+  font-size: 18px;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.qty-btn:active { background: var(--deep-pink); color: white; }
+.qty-num { font-size: 16px; min-width: 24px; text-align: center; }
+
+/* ── Order Form ── */
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 14px; color: var(--brown); margin-bottom: 6px; }
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px dashed var(--warm-yellow);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 15px;
+  background: var(--cream);
+  color: var(--dark-brown);
+  transition: border-color 0.2s;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: var(--deep-pink);
+  border-style: solid;
+}
+
+.form-group textarea { resize: none; height: 70px; }
+
+.submit-order-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--deep-pink);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-family: inherit;
+  font-size: 18px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  box-shadow: 0 4px 16px rgba(255,107,107,0.25);
+  transition: all 0.2s;
+}
+
+.submit-order-btn:active { transform: scale(0.97); }
+
+/* ── Success ── */
+.success-toast {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: var(--radius);
+  padding: 32px 28px;
+  text-align: center;
+  box-shadow: 0 8px 40px rgba(93, 58, 26, 0.2);
+  z-index: 300;
+  animation: popIn 0.4s ease-out;
+}
+
+.success-emoji { font-size: 64px; display: block; margin-bottom: 12px; }
+.success-text { font-size: 18px; color: var(--brown); }
+.success-sub { font-size: 13px; color: #C4A882; margin-top: 4px; }
+
+/* ── Responsive ── */
+@media (min-width: 768px) {
+  .menu-grid { grid-template-columns: repeat(4, 1fr); max-width: 960px; margin: 0 auto; }
+  .categories { max-width: 800px; margin: 0 auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- Floating anime pig emojis -->
+<span class="float-emoji a">🐷</span>
+<span class="float-emoji b">🐽</span>
+<span class="float-emoji c">✨</span>
+<span class="float-emoji d">🐷</span>
+
+<header>
+  <span class="logo">✨🐷✨</span>
+  <h1>猪人食堂</h1>
+  <p class="subtitle">今天吃啥？哼哼~ 💖</p>
+  <div class="doodle-divider">🐷 ✨ 🐽 ✨ 🐷</div>
+</header>
+
+<div class="categories" id="categories"></div>
+<div class="menu-grid" id="menuGrid"></div>
+
+<div class="cart-bar" id="cartBar">
+  <div class="cart-info">
+    <div class="cart-title">🛒 已选 <span class="cart-count" id="cartCount">0</span> 件</div>
+    <div class="cart-total" id="cartTotal">¥0</div>
+  </div>
+  <button class="checkout-btn" id="checkoutBtn" disabled>去下单</button>
+</div>
+
+<script>
+const DISHES = [
+  // 健身餐
+  { id: 1,  name: '香煎鸡胸肉',     emoji: '🍗', price: 22, cat: '健身餐' },
+  { id: 2,  name: '藜麦牛油果沙拉', emoji: '🥑', price: 28, cat: '健身餐' },
+  { id: 3,  name: '清蒸鲈鱼',       emoji: '🐟', price: 30, cat: '健身餐' },
+  { id: 4,  name: '水煮西兰花',     emoji: '🥦', price: 10, cat: '健身餐' },
+  { id: 5,  name: '蒸紫薯',         emoji: '🍠', price: 8,  cat: '健身餐' },
+  { id: 6,  name: '隔夜燕麦杯',     emoji: '🥣', price: 15, cat: '健身餐' },
+  { id: 7,  name: '牛肉蔬菜沙拉',   emoji: '🥗', price: 30, cat: '健身餐' },
+  { id: 8,  name: '全麦鸡肉三明治', emoji: '🥪', price: 20, cat: '健身餐' },
+  { id: 9,  name: '蛋白香蕉奶昔',   emoji: '🥤', price: 16, cat: '健身餐' },
+  // 主食
+  { id: 10, name: '白米饭',         emoji: '🍚', price: 2,  cat: '主食' },
+  { id: 11, name: '蛋炒饭',         emoji: '🍳', price: 12, cat: '主食' },
+  { id: 12, name: '葱油拌面',       emoji: '🍜', price: 10, cat: '主食' },
+  { id: 13, name: '手工水饺',       emoji: '🥟', price: 18, cat: '主食' },
+  { id: 14, name: '番茄鸡蛋面',     emoji: '🍝', price: 15, cat: '主食' },
+  // 热菜
+  { id: 15, name: '番茄炒蛋',       emoji: '🍅', price: 16, cat: '热菜' },
+  { id: 16, name: '红烧肉',         emoji: '🍖', price: 32, cat: '热菜' },
+  { id: 17, name: '糖醋排骨',       emoji: '🦴', price: 35, cat: '热菜' },
+  { id: 18, name: '鱼香肉丝',       emoji: '🥩', price: 22, cat: '热菜' },
+  { id: 19, name: '麻婆豆腐',       emoji: '🫘', price: 15, cat: '热菜' },
+  { id: 20, name: '地三鲜',         emoji: '🥔', price: 18, cat: '热菜' },
+  { id: 21, name: '蒜蓉西兰花',     emoji: '🥦', price: 14, cat: '热菜' },
+  { id: 22, name: '宫保鸡丁',       emoji: '🐔', price: 24, cat: '热菜' },
+  { id: 23, name: '干煸四季豆',     emoji: '🫛', price: 16, cat: '热菜' },
+  { id: 24, name: '回锅肉',         emoji: '🥓', price: 26, cat: '热菜' },
+  // 汤品
+  { id: 25, name: '紫菜蛋花汤',     emoji: '🥚', price: 8,  cat: '汤品' },
+  { id: 26, name: '番茄蛋汤',       emoji: '🍲', price: 10, cat: '汤品' },
+  { id: 27, name: '酸辣汤',         emoji: '🌶️', price: 12, cat: '汤品' },
+  // 饮品
+  { id: 28, name: '冰美式',         emoji: '🧊', price: 12, cat: '饮品' },
+  { id: 29, name: '拿铁',           emoji: '🥛', price: 16, cat: '饮品' },
+  { id: 30, name: '手冲咖啡',       emoji: '☕', price: 20, cat: '饮品' },
+  { id: 31, name: '冰镇酸梅汤',     emoji: '🫗', price: 6,  cat: '饮品' },
+  { id: 32, name: '热豆浆',         emoji: '🫘', price: 5,  cat: '饮品' },
+  { id: 33, name: '柠檬水',         emoji: '🍋', price: 4,  cat: '饮品' },
+];
+
+const CATS = ['全部', '健身餐', '主食', '热菜', '汤品', '饮品'];
+let activeCat = '全部';
+let cart = {};
+
+const catEl = document.getElementById('categories');
+const gridEl = document.getElementById('menuGrid');
+const cartCount = document.getElementById('cartCount');
+const cartTotal = document.getElementById('cartTotal');
+const checkoutBtn = document.getElementById('checkoutBtn');
+
+CATS.forEach(c => {
+  const btn = document.createElement('button');
+  btn.className = 'cat-btn' + (c === activeCat ? ' active' : '');
+  btn.textContent = c;
+  btn.onclick = () => { activeCat = c; render(); };
+  catEl.appendChild(btn);
+});
+
+function render() {
+  const filtered = activeCat === '全部' ? DISHES : DISHES.filter(d => d.cat === activeCat);
+  gridEl.innerHTML = filtered.map(d => {
+    const hasNote = cart[d.id] && cart[d.id].note;
+    return `
+      <div class="dish-card${hasNote ? ' has-note' : ''}" onclick="openDishModal(${d.id})">
+        <span class="has-note-dot" title="已加备注"></span>
+        <span class="dish-emoji">${d.emoji}</span>
+        <div class="dish-name">${d.name}</div>
+        <div class="dish-price">${d.price}</div>
+      </div>
+    `;
+  }).join('');
+
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent === activeCat);
+  });
+  updateCartUI();
+}
+
+// ── Dish Note Modal ──
+function openDishModal(dishId) {
+  const d = DISHES.find(x => x.id === dishId);
+  const existing = cart[dishId];
+  const qty = existing ? existing.qty : 1;
+  const note = existing ? existing.note : '';
+
+  const html = `
+    <div class="dish-modal-overlay" id="dishModalOverlay" onclick="if(event.target===this)closeDishModal()">
+      <div class="dish-modal">
+        <span class="big-emoji">${d.emoji}</span>
+        <div class="big-name">${d.name}</div>
+        <div class="big-price">¥${d.price}</div>
+        <input class="note-input" id="dishNote" placeholder="💬 添加备注（比如：少油、加辣...）" value="${escapeHtml(note)}" autocomplete="off">
+        <div class="qty-row">
+          <button class="qty-btn-lg" onclick="changeDishQty(-1)">−</button>
+          <span class="qty-num-lg" id="dishQty">${qty}</span>
+          <button class="qty-btn-lg" onclick="changeDishQty(1)">+</button>
+        </div>
+        <button class="add-btn" onclick="confirmAddToCart(${dishId})">
+          ${existing ? '更新购物车' : '加入购物车'}
+        </button>
+        ${existing ? '<button class="cancel-btn" onclick="removeCartItem(' + dishId + ');closeDishModal()">从购物车移除</button>' : '<button class="cancel-btn" onclick="closeDishModal()">再想想</button>'}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('dishModalOverlay')?.remove();
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = html;
+  document.body.appendChild(wrapper.firstElementChild);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function closeDishModal() { document.getElementById('dishModalOverlay')?.remove(); }
+
+function changeDishQty(delta) {
+  const el = document.getElementById('dishQty');
+  if (!el) return;
+  let v = parseInt(el.textContent) + delta;
+  if (v < 1) v = 1;
+  if (v > 99) v = 99;
+  el.textContent = v;
+}
+
+function confirmAddToCart(dishId) {
+  const qtyEl = document.getElementById('dishQty');
+  const noteEl = document.getElementById('dishNote');
+  const qty = parseInt(qtyEl.textContent) || 1;
+  const note = noteEl.value.trim();
+  if (qty <= 0) { closeDishModal(); return; }
+  cart[dishId] = { qty, note };
+  closeDishModal();
+  updateCartUI();
+  render();
+  cartCount.style.transform = 'scale(1.3)';
+  setTimeout(() => { cartCount.style.transform = 'scale(1)'; }, 150);
+}
+
+function removeCartItem(dishId) { delete cart[dishId]; updateCartUI(); render(); }
+
+function getCartItems() {
+  return Object.entries(cart).map(([id, info]) => {
+    const d = DISHES.find(x => x.id === +id);
+    if (!d) return null;
+    return { ...d, qty: info.qty, note: info.note };
+  }).filter(Boolean);
+}
+
+function getTotal() { return getCartItems().reduce((sum, item) => sum + item.price * item.qty, 0); }
+function getTotalCount() { return Object.values(cart).reduce((s, info) => s + info.qty, 0); }
+
+function updateCartUI() {
+  const count = getTotalCount();
+  const total = getTotal();
+  cartCount.textContent = count;
+  cartTotal.textContent = '¥' + total;
+  checkoutBtn.disabled = count === 0;
+}
+
+// ── Checkout Modal ──
+checkoutBtn.addEventListener('click', () => {
+  const items = getCartItems();
+  if (!items.length) return;
+
+  let html = `
+    <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>🛒 确认订单</h2>
+          <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+  `;
+
+  items.forEach(item => {
+    html += `
+      <div class="cart-item">
+        <div class="cart-item-main">
+          <span style="font-size:28px">${item.emoji}</span>
+          <span class="cart-item-name">${item.name}</span>
+          <span class="cart-item-price">¥${item.price * item.qty}</span>
+          <div class="qty-control">
+            <button class="qty-btn" onclick="event.stopPropagation();modCartQty(${item.id},-1);refreshModal()">−</button>
+            <span class="qty-num">${item.qty}</span>
+            <button class="qty-btn" onclick="event.stopPropagation();modCartQty(${item.id},1);refreshModal()">+</button>
+          </div>
+        </div>
+        ${item.note ? '<div class="cart-item-note">💬 ' + escapeHtml(item.note) + '</div>' : ''}
+      </div>
+    `;
+  });
+
+  html += `
+        <div style="text-align:right;padding:16px 0;font-size:20px;color:var(--dark-brown)">
+          合计：<strong style="color:var(--deep-pink)">¥${getTotal()}</strong>
+        </div>
+        <div class="form-group">
+          <label>👤 你的名字</label>
+          <input id="orderName" placeholder="比如：妈妈">
+        </div>
+        <div class="form-group">
+          <label>💬 整单备注</label>
+          <textarea id="orderNote" placeholder="还有什么要说的吗？"></textarea>
+        </div>
+        <button class="submit-order-btn" onclick="submitOrder()">哼哼！下单啦</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modalOverlay')?.remove();
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = html;
+  document.body.appendChild(wrapper.firstElementChild);
+});
+
+function modCartQty(dishId, delta) {
+  if (!cart[dishId]) return;
+  cart[dishId].qty += delta;
+  if (cart[dishId].qty <= 0) delete cart[dishId];
+  updateCartUI();
+  render();
+}
+
+function closeModal() { document.getElementById('modalOverlay')?.remove(); }
+function refreshModal() { closeModal(); checkoutBtn.click(); }
+
+// ── Submit Order ──
+function submitOrder() {
+  const name = document.getElementById('orderName').value.trim() || '未署名';
+  const note = document.getElementById('orderNote').value.trim() || '无';
+  const items = getCartItems();
+  const total = getTotal();
+
+  const lines = items.map(i => {
+    let line = `  ${i.emoji} ${i.name} ×${i.qty}  ¥${i.price * i.qty}`;
+    if (i.note) line += `  [${i.note}]`;
+    return line;
+  });
+
+  const orderText = `✨🐷✨ 猪人食堂 · 新订单！
+━━━━━━━━━━━━━━
+👤 ${name}
+📋 ${lines.join('\n')}
+━━━━━━━━━━━━━━
+💰 合计：¥${total}
+📝 备注：${note}
+🕐 ${new Date().toLocaleString('zh-CN')}
+
+哼哼！快去投喂吧～`;
+
+  closeModal();
+
+  const toast = document.createElement('div');
+  toast.className = 'success-toast';
+  toast.innerHTML = `
+    <span class="success-emoji">✨🐷✨</span>
+    <div class="success-text">下单成功！哼哼~ 💖</div>
+    <div class="success-sub">快去告诉做饭的人吧！</div>
+  `;
+  document.body.appendChild(toast);
+
+  navigator.clipboard.writeText(orderText).catch(() => {});
+
+  setTimeout(() => { toast.remove(); }, 2000);
+
+  cart = {};
+  updateCartUI();
+  render();
+}
+
+render();
+</script>
+
+</body>
+</html>
