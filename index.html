@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>猪人食堂 · 家庭点餐</title>
+<title>PIGGY CANTEEN · Family Kitchen</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');
 
@@ -909,7 +909,7 @@ body, header, .dish-card, .cart-bar, .cat-btn, .modal, .dish-modal, .order-detai
 
 <header>
   <span class="logo" id="logoEl" title="长按有惊喜 🐷">✨🐷✨</span>
-  <h1>猪人食堂<span class="vip-badge" id="vipBadge" style="display:none">👑 VIP</span></h1>
+  <h1>PIGGY CANTEEN<span class="vip-badge" id="vipBadge" style="display:none">👑 VIP</span></h1>
   <p class="subtitle" id="subtitleEl" title="点击有惊喜">今天吃啥？哼哼~ 💖</p>
   <div class="theme-indicator" id="themeIndicator" style="font-size:12px;color:#C4A882;margin-top:2px"></div>
   <div class="doodle-divider">🐷 ✨ 🐽 ✨ 🐷</div>
@@ -1241,16 +1241,16 @@ function submitOrder() {
     return line;
   });
 
-  const orderText = `✨🐷✨ 猪人食堂 · 新订单！${vipLabel}
+  const orderText = `✨🐷✨ PIGGY CANTEEN · New Order!${vipLabel}
 ━━━━━━━━━━━━━━
 👤 ${name}
 📋 ${lines.join('\n')}
 ━━━━━━━━━━━━━━
-💰 合计：¥${total}${vipLabel ? ' (原价 ¥' + totalOriginal + ')' : ''}
-📝 备注：${note}
+💰 Total: ¥${total}${vipLabel ? ' (Orig ¥' + totalOriginal + ')' : ''}
+📝 Note: ${note}
 🕐 ${new Date().toLocaleString('zh-CN')}
 
-哼哼！快去投喂吧～`;
+Oink oink! Time to cook～`;
 
   closeModal();
 
