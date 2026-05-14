@@ -792,6 +792,111 @@ h1 {
   .menu-grid { grid-template-columns: repeat(4, 1fr); max-width: 960px; margin: 0 auto; }
   .categories { max-width: 800px; margin: 0 auto; }
 }
+
+/* ── Pig Interaction (long press) ── */
+.logo {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: transform 0.3s;
+  position: relative;
+}
+
+.pig-reaction {
+  position: fixed;
+  pointer-events: none;
+  z-index: 500;
+  font-size: 48px;
+  animation: pigReact 1s ease-out forwards;
+}
+
+@keyframes pigReact {
+  0% { transform: translate(-50%, 0) scale(0.3); opacity: 1; }
+  50% { transform: translate(-50%, -40px) scale(1.2); opacity: 1; }
+  100% { transform: translate(-50%, -80px) scale(0.6); opacity: 0; }
+}
+
+.pig-shake { animation: pigShake 0.4s ease-in-out; }
+@keyframes pigShake {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  20% { transform: translateX(-8px) rotate(-8deg); }
+  40% { transform: translateX(8px) rotate(8deg); }
+  60% { transform: translateX(-6px) rotate(-5deg); }
+  80% { transform: translateX(4px) rotate(3deg); }
+}
+
+.pig-spin { animation: pigSpin 0.6s ease-in-out; }
+@keyframes pigSpin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.3); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.pig-bounce { animation: pigBounce 0.5s ease-in-out; }
+@keyframes pigBounce {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-20px); }
+  50% { transform: translateY(0); }
+  70% { transform: translateY(-10px); }
+}
+
+/* ── Countdown Banner ── */
+.cook-countdown {
+  position: fixed;
+  bottom: 100px;
+  left: 16px;
+  right: 16px;
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  box-shadow: 0 8px 32px rgba(93, 58, 26, 0.15);
+  z-index: 350;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  animation: slideUpCountdown 0.4s ease-out;
+  border: 2px solid var(--warm-yellow);
+}
+
+@keyframes slideUpCountdown {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.cook-icon {
+  font-size: 40px;
+  animation: pigBounce 1s infinite;
+}
+
+.cook-info { flex: 1; }
+.cook-title { font-size: 15px; color: var(--dark-brown); font-weight: bold; }
+.cook-detail { font-size: 12px; color: var(--brown); margin-top: 2px; }
+
+.cook-timer {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--deep-pink);
+  min-width: 50px;
+  text-align: center;
+}
+
+.cook-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--deep-pink);
+  border-radius: 0 0 0 var(--radius);
+  transition: width 1s linear;
+}
+
+.cook-done .cook-timer { color: #4CAF50; }
+.cook-done .cook-icon { animation: none; }
+
+/* ── Theme transition ── */
+body, header, .dish-card, .cart-bar, .cat-btn, .modal, .dish-modal, .order-detail {
+  transition: background-color 0.8s, color 0.8s, border-color 0.8s, box-shadow 0.8s;
+}
 </style>
 </head>
 <body>
@@ -803,11 +908,23 @@ h1 {
 <span class="float-emoji d">🐷</span>
 
 <header>
-  <span class="logo" id="logoEl">✨🐷✨</span>
+  <span class="logo" id="logoEl" title="长按有惊喜 🐷">✨🐷✨</span>
   <h1>猪人食堂<span class="vip-badge" id="vipBadge" style="display:none">👑 VIP</span></h1>
   <p class="subtitle" id="subtitleEl" title="点击有惊喜">今天吃啥？哼哼~ 💖</p>
+  <div class="theme-indicator" id="themeIndicator" style="font-size:12px;color:#C4A882;margin-top:2px"></div>
   <div class="doodle-divider">🐷 ✨ 🐽 ✨ 🐷</div>
 </header>
+
+<!-- Countdown banner -->
+<div class="cook-countdown" id="cookBanner" style="display:none">
+  <span class="cook-icon" id="cookIcon">🐷</span>
+  <div class="cook-info">
+    <div class="cook-title" id="cookTitle">大厨收到订单！</div>
+    <div class="cook-detail" id="cookDetail">正在备菜中...</div>
+  </div>
+  <div class="cook-timer" id="cookTimer">--</div>
+  <div class="cook-progress" id="cookProgress" style="width:100%"></div>
+</div>
 
 <div class="categories" id="categories"></div>
 <div class="menu-grid" id="menuGrid"></div>
@@ -1189,6 +1306,9 @@ function submitOrder() {
   // Auto-copy to clipboard
   navigator.clipboard.writeText(orderText).catch(() => {});
 
+  // Start cooking countdown
+  showCookCountdown();
+
   cart = {};
   updateCartUI();
   render();
@@ -1269,6 +1389,241 @@ if (isVip) {
     setTimeout(showVipWelcome, 500);
   }
 }
+
+// ════════════════════════════════════════
+//  Feature 6: 猪猪互动彩蛋 (long press)
+// ════════════════════════════════════════
+const PIG_REACTIONS = [
+  { emoji: '😍', text: '爱心眼！' },
+  { emoji: '🤤', text: '看饿了...' },
+  { emoji: '🫨', text: '抖抖抖~' },
+  { emoji: '💨', text: '飞速奔跑！' },
+  { emoji: '🌟', text: '闪闪发光！' },
+  { emoji: '🎉', text: '今天吃大餐！' },
+  { emoji: '😋', text: '美味~~' },
+  { emoji: '💤', text: '吃饱了zzZ' },
+];
+
+let pressTimer = null;
+const logoEl = document.getElementById('logoEl');
+
+function startPress(e) {
+  e.preventDefault();
+  pressTimer = setTimeout(() => {
+    triggerPigReaction();
+  }, 600);
+}
+
+function cancelPress() {
+  if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+}
+
+function triggerPigReaction() {
+  const reaction = PIG_REACTIONS[Math.floor(Math.random() * PIG_REACTIONS.length)];
+  const animations = ['pig-shake', 'pig-spin', 'pig-bounce'];
+  const anim = animations[Math.floor(Math.random() * animations.length)];
+
+  // Animate the logo
+  logoEl.classList.remove('pig-shake', 'pig-spin', 'pig-bounce');
+  void logoEl.offsetWidth;
+  logoEl.classList.add(anim);
+
+  // Floating reaction bubble
+  const rect = logoEl.getBoundingClientRect();
+  const bubble = document.createElement('div');
+  bubble.className = 'pig-reaction';
+  bubble.style.left = (rect.left + rect.width / 2) + 'px';
+  bubble.style.top = (rect.top - 10) + 'px';
+  bubble.innerHTML = reaction.emoji;
+  document.body.appendChild(bubble);
+  setTimeout(() => bubble.remove(), 1100);
+
+  // Show text near logo
+  const txt = document.createElement('div');
+  txt.className = 'pig-reaction';
+  txt.style.left = (rect.left + rect.width / 2) + 'px';
+  txt.style.top = (rect.top + 20) + 'px';
+  txt.style.fontSize = '16px';
+  txt.style.color = 'var(--deep-pink)';
+  txt.style.background = 'rgba(255,255,255,0.9)';
+  txt.style.padding = '4px 12px';
+  txt.style.borderRadius = '50px';
+  txt.textContent = reaction.text;
+  document.body.appendChild(txt);
+  setTimeout(() => txt.remove(), 1100);
+
+  // Temporary emoji swap
+  const orig = logoEl.textContent;
+  logoEl.textContent = reaction.emoji;
+  setTimeout(() => { logoEl.textContent = orig; }, 800);
+}
+
+// Touch events
+logoEl.addEventListener('touchstart', startPress, { passive: false });
+logoEl.addEventListener('touchend', cancelPress);
+logoEl.addEventListener('touchmove', cancelPress);
+// Mouse events
+logoEl.addEventListener('mousedown', startPress);
+logoEl.addEventListener('mouseup', cancelPress);
+logoEl.addEventListener('mouseleave', cancelPress);
+
+// ════════════════════════════════════════
+//  Feature 7: 烹饪倒计时
+// ════════════════════════════════════════
+let cookTimerId = null;
+
+function showCookCountdown() {
+  const banner = document.getElementById('cookBanner');
+  const timerEl = document.getElementById('cookTimer');
+  const progressEl = document.getElementById('cookProgress');
+  const iconEl = document.getElementById('cookIcon');
+  const titleEl = document.getElementById('cookTitle');
+  const detailEl = document.getElementById('cookDetail');
+
+  const totalSeconds = Math.floor(Math.random() * 26) + 15; // 15-40 min
+  let remaining = totalSeconds;
+
+  banner.style.display = 'flex';
+  banner.classList.remove('cook-done');
+  progressEl.style.width = '100%';
+  iconEl.textContent = '🐷';
+  titleEl.textContent = '大厨收到订单！';
+  updateTimerDisplay();
+
+  const cookingMsgs = ['备菜中...', '食材处理中...', '下锅啦~', '翻炒中🔥', '收汁中...', '装盘啦🍽️', '马上就好！'];
+  let msgIdx = 0;
+  const msgInterval = Math.floor(totalSeconds * 1000 / cookingMsgs.length);
+
+  if (cookTimerId) clearInterval(cookTimerId);
+
+  cookTimerId = setInterval(() => {
+    remaining--;
+    updateTimerDisplay();
+
+    const pct = (remaining / totalSeconds * 100);
+    progressEl.style.width = pct + '%';
+
+    const newMsgIdx = Math.floor((totalSeconds - remaining) / totalSeconds * cookingMsgs.length);
+    if (newMsgIdx !== msgIdx && newMsgIdx < cookingMsgs.length) {
+      msgIdx = newMsgIdx;
+      detailEl.textContent = cookingMsgs[msgIdx];
+    }
+
+    if (remaining <= 0) {
+      clearInterval(cookTimerId);
+      cookTimerId = null;
+      banner.classList.add('cook-done');
+      iconEl.textContent = '🍽️';
+      titleEl.textContent = '出锅啦！';
+      detailEl.textContent = '快去端菜吧~';
+      timerEl.textContent = '✓';
+      progressEl.style.width = '0%';
+      progressEl.style.background = '#4CAF50';
+      // Auto-hide after 8 seconds
+      setTimeout(() => { banner.style.display = 'none'; }, 8000);
+    }
+  }, 1000);
+
+  function updateTimerDisplay() {
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    timerEl.textContent = m + ':' + String(s).padStart(2, '0');
+  }
+}
+
+// Hide countdown on tap
+document.getElementById('cookBanner').addEventListener('click', () => {
+  const banner = document.getElementById('cookBanner');
+  if (banner.classList.contains('cook-done')) {
+    banner.style.display = 'none';
+    if (cookTimerId) { clearInterval(cookTimerId); cookTimerId = null; }
+  }
+});
+
+// ════════════════════════════════════════
+//  Feature 8: 时段主题切换
+// ════════════════════════════════════════
+const THEMES = {
+  morning: {
+    name: '☀️ 元气早晨',
+    bg: '#FFF8F0',
+    blob1: 'rgba(255,180,140,0.18)',
+    blob2: 'rgba(255,220,150,0.13)',
+    blob3: 'rgba(255,160,130,0.12)',
+    blob4: 'rgba(255,210,170,0.14)',
+    blob5: 'rgba(255,180,150,0.12)',
+    deepPink: '#FF8C7A',
+    pink: '#FFB5A8',
+    warmYellow: '#FFECD0',
+  },
+  noon: {
+    name: '🌤️ 活力午后',
+    bg: '#FFF5ED',
+    blob1: 'rgba(255,160,100,0.16)',
+    blob2: 'rgba(255,190,120,0.12)',
+    blob3: 'rgba(255,140,110,0.10)',
+    blob4: 'rgba(255,180,140,0.12)',
+    blob5: 'rgba(255,150,120,0.10)',
+    deepPink: '#FF6B6B',
+    pink: '#FF9E9E',
+    warmYellow: '#FFE8D6',
+  },
+  evening: {
+    name: '🌙 温馨晚餐',
+    bg: '#FFF0F0',
+    blob1: 'rgba(255,130,120,0.16)',
+    blob2: 'rgba(255,150,100,0.10)',
+    blob3: 'rgba(255,120,130,0.12)',
+    blob4: 'rgba(255,140,110,0.11)',
+    blob5: 'rgba(255,130,140,0.13)',
+    deepPink: '#E05570',
+    pink: '#E88898',
+    warmYellow: '#FFD8D0',
+  },
+  night: {
+    name: '🌛 深夜食堂',
+    bg: '#FFF2F2',
+    blob1: 'rgba(200,120,130,0.10)',
+    blob2: 'rgba(200,140,110,0.08)',
+    blob3: 'rgba(180,110,120,0.08)',
+    blob4: 'rgba(190,120,100,0.07)',
+    blob5: 'rgba(180,130,130,0.08)',
+    deepPink: '#C06070',
+    pink: '#D4A0A8',
+    warmYellow: '#F0D8D8',
+  },
+};
+
+function getTimeTheme() {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 11) return 'morning';
+  if (h >= 11 && h < 17) return 'noon';
+  if (h >= 17 && h < 22) return 'evening';
+  return 'night';
+}
+
+function applyTheme(themeKey) {
+  const t = THEMES[themeKey];
+  const root = document.documentElement;
+
+  root.style.setProperty('--deep-pink', t.deepPink);
+  root.style.setProperty('--pink', t.pink);
+  root.style.setProperty('--warm-yellow', t.warmYellow);
+
+  document.body.style.backgroundColor = t.bg;
+  document.body.style.backgroundImage = `
+    radial-gradient(ellipse 400px 300px at 15% 20%, ${t.blob1} 0%, transparent 100%),
+    radial-gradient(ellipse 350px 400px at 85% 60%, ${t.blob2} 0%, transparent 100%),
+    radial-gradient(ellipse 300px 350px at 50% 90%, ${t.blob3} 0%, transparent 100%),
+    radial-gradient(ellipse 250px 250px at 90% 8%, ${t.blob4} 0%, transparent 100%),
+    radial-gradient(ellipse 200px 300px at 5% 75%, ${t.blob5} 0%, transparent 100%),
+    radial-gradient(circle, rgba(255,154,139,0.06) 1px, transparent 1px)
+  `;
+
+  document.getElementById('themeIndicator').textContent = t.name;
+}
+
+applyTheme(getTimeTheme());
 
 renderCategories();
 render();
