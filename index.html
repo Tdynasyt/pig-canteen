@@ -28,44 +28,43 @@ body {
   min-height: 100vh;
   color: var(--dark-brown);
   padding-bottom: 100px;
-  /* Layered background: base cream + large colored blobs + repeating pig pattern */
-  background-color: #FFF0E8;
-  background-image:
-    /* Large soft blobs */
-    radial-gradient(ellipse 400px 300px at 15% 20%, rgba(255,154,139,0.15) 0%, transparent 100%),
-    radial-gradient(ellipse 350px 400px at 85% 60%, rgba(255,179,71,0.10) 0%, transparent 100%),
-    radial-gradient(ellipse 300px 350px at 50% 90%, rgba(255,130,130,0.10) 0%, transparent 100%),
-    radial-gradient(ellipse 250px 250px at 90% 8%, rgba(255,200,160,0.12) 0%, transparent 100%),
-    radial-gradient(ellipse 200px 300px at 5% 75%, rgba(255,160,140,0.10) 0%, transparent 100%),
-    /* Subtle dot grid */
-    radial-gradient(circle, rgba(255,154,139,0.06) 1px, transparent 1px);
-  background-size:
-    100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%,
-    28px 28px;
-  background-position:
-    0 0, 0 0, 0 0, 0 0, 0 0,
-    0 0;
-  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+  background: #FFF0E8 fixed;
+  /* GPU-friendly: single pseudo-element for blobs instead of 5 stacked gradients */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* ── Floating Pig Emojis ── */
+/* Pseudo-element replaces stacked radial-gradient layers → 1 paint surface */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 420px 320px at 18% 25%, var(--blob1, rgba(255,154,139,0.13)) 0%, transparent 100%),
+    radial-gradient(ellipse 360px 380px at 82% 55%, var(--blob2, rgba(255,179,71,0.09)) 0%, transparent 100%),
+    radial-gradient(ellipse 280px 320px at 50% 85%, var(--blob3, rgba(255,130,130,0.08)) 0%, transparent 100%);
+  will-change: transform;
+}
+
+/* ── Floating Pig Emojis (GPU-composited) ── */
 .float-emoji {
   position: fixed;
   pointer-events: none;
   z-index: 0;
   font-size: 80px;
   opacity: 0.10;
-  animation: floatLarge 8s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
 }
-.float-emoji.a { top: 10%; left: 5%;  animation-delay: 0s; }
-.float-emoji.b { top: 6%;  right: 5%; animation-delay: 2.5s; font-size: 100px; }
-.float-emoji.c { bottom: 22%; left: 3%; animation-delay: 5s; font-size: 65px; }
-.float-emoji.d { bottom: 14%; right: 8%; animation-delay: 6.5s; font-size: 75px; }
+.float-emoji.a { top: 10%; left: 5%;  animation: floatA 10s ease-in-out infinite; }
+.float-emoji.b { top: 6%;  right: 5%; font-size: 100px; animation: floatB 12s ease-in-out infinite; }
+.float-emoji.c { bottom: 22%; left: 3%; font-size: 65px; animation: floatA 9s ease-in-out infinite 3s; }
+.float-emoji.d { bottom: 14%; right: 8%; font-size: 75px; animation: floatB 11s ease-in-out infinite 4s; }
 
-@keyframes floatLarge {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(8deg); }
-}
+@keyframes floatA { 0%,100%{transform:translateZ(0) translateY(0) rotate(0deg)} 50%{transform:translateZ(0) translateY(-18px) rotate(6deg)} }
+@keyframes floatB { 0%,100%{transform:translateZ(0) translateY(0) rotate(0deg)} 50%{transform:translateZ(0) translateY(-22px) rotate(-7deg)} }
 
 /* ── Header ── */
 header {
@@ -79,14 +78,16 @@ header {
   font-size: 90px;
   display: block;
   margin: 0 auto;
-  animation: wiggle 2s ease-in-out infinite;
-  filter: drop-shadow(0 3px 6px rgba(255,107,107,0.2));
+  animation: wiggle 3s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+  text-shadow: 0 3px 12px rgba(255,107,107,0.15);
 }
 
 @keyframes wiggle {
-  0%, 100% { transform: rotate(0deg); }
-  20% { transform: rotate(-6deg); }
-  60% { transform: rotate(6deg); }
+  0%, 100% { transform: translateZ(0) rotate(0deg); }
+  25% { transform: translateZ(0) rotate(-8deg); }
+  75% { transform: translateZ(0) rotate(8deg); }
 }
 
 h1 {
@@ -138,7 +139,7 @@ h1 {
   font-size: 14px;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s;
+  transition: transform 0.15s, background 0.15s, border-color 0.15s;
   letter-spacing: 1px;
 }
 
@@ -162,17 +163,22 @@ h1 {
 }
 
 .dish-card {
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(4px);
+  background: rgba(255,255,255,0.92);
   border-radius: var(--radius);
   padding: 18px 14px;
   text-align: center;
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 8px rgba(93,58,26,0.05);
   border: 2px solid transparent;
-  transition: all 0.25s;
+  transition: transform 0.15s, border-color 0.15s;
   position: relative;
   overflow: hidden;
   cursor: pointer;
+  /* GPU composite layer + containment for fast scroll */
+  contain: layout style paint;
+  content-visibility: auto;
+  contain-intrinsic-size: 160px;
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .dish-card .has-note-dot {
@@ -247,16 +253,17 @@ h1 {
   bottom: 0;
   left: 0;
   right: 0;
-  background: rgba(255,255,255,0.95);
-  backdrop-filter: blur(8px);
+  background: rgba(255,255,255,0.97);
   border-radius: var(--radius) var(--radius) 0 0;
-  box-shadow: 0 -4px 24px rgba(93, 58, 26, 0.1);
+  box-shadow: 0 -2px 16px rgba(93,58,26,0.08);
   padding: 14px 20px;
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .cart-info { flex: 1; }
@@ -279,6 +286,8 @@ h1 {
   align-items: center;
   justify-content: center;
   font-size: 12px;
+  transition: transform 0.15s ease;
+  will-change: transform;
 }
 
 .cart-total {
@@ -298,7 +307,8 @@ h1 {
   cursor: pointer;
   letter-spacing: 2px;
   box-shadow: 0 4px 16px rgba(255,107,107,0.35);
-  transition: all 0.2s;
+  transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+  will-change: transform;
 }
 
 .checkout-btn:active { transform: scale(0.95); opacity: 0.85; }
@@ -893,9 +903,18 @@ h1 {
 .cook-done .cook-timer { color: #4CAF50; }
 .cook-done .cook-icon { animation: none; }
 
-/* ── Theme transition ── */
-body, header, .dish-card, .cart-bar, .cat-btn, .modal, .dish-modal, .order-detail {
-  transition: background-color 0.8s, color 0.8s, border-color 0.8s, box-shadow 0.8s;
+/* ── Theme transition (targeted, GPU-safe) ── */
+body, .cat-btn, .modal, .dish-modal, .order-detail {
+  transition: background-color 0.6s ease, color 0.6s ease;
+}
+
+/* ── Accessibility: respect reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 </style>
 </head>
@@ -1609,21 +1628,49 @@ function applyTheme(themeKey) {
   root.style.setProperty('--deep-pink', t.deepPink);
   root.style.setProperty('--pink', t.pink);
   root.style.setProperty('--warm-yellow', t.warmYellow);
-
+  root.style.setProperty('--blob1', t.blob1);
+  root.style.setProperty('--blob2', t.blob2);
+  root.style.setProperty('--blob3', t.blob3);
   document.body.style.backgroundColor = t.bg;
-  document.body.style.backgroundImage = `
-    radial-gradient(ellipse 400px 300px at 15% 20%, ${t.blob1} 0%, transparent 100%),
-    radial-gradient(ellipse 350px 400px at 85% 60%, ${t.blob2} 0%, transparent 100%),
-    radial-gradient(ellipse 300px 350px at 50% 90%, ${t.blob3} 0%, transparent 100%),
-    radial-gradient(ellipse 250px 250px at 90% 8%, ${t.blob4} 0%, transparent 100%),
-    radial-gradient(ellipse 200px 300px at 5% 75%, ${t.blob5} 0%, transparent 100%),
-    radial-gradient(circle, rgba(255,154,139,0.06) 1px, transparent 1px)
-  `;
 
   document.getElementById('themeIndicator').textContent = t.name;
 }
 
 applyTheme(getTimeTheme());
+
+// Pause animations when page hidden (save GPU/battery)
+document.addEventListener('visibilitychange', () => {
+  document.querySelectorAll('.float-emoji,.logo').forEach(el => {
+    el.style.animationPlayState = document.hidden ? 'paused' : 'running';
+  });
+});
+
+// Scroll-reveal: cards fade+slide in as they enter viewport
+if ('IntersectionObserver' in window) {
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateZ(0) translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  // Patch render to observe new cards
+  const origRender = render;
+  render = function() {
+    origRender();
+    requestAnimationFrame(() => {
+      gridEl.querySelectorAll('.dish-card').forEach((card, i) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateZ(0) translateY(20px)';
+        card.style.transition = 'opacity 0.35s ease, transform 0.35s ease';
+        card.style.transitionDelay = (i % 8) * 0.03 + 's';
+        revealObserver.observe(card);
+      });
+    });
+  };
+}
 
 renderCategories();
 render();
