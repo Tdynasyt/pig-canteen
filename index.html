@@ -224,6 +224,37 @@ h1 {
   margin-bottom: 8px;
   position: relative;
   z-index: 1;
+  line-height: 1.2;
+}
+
+.food-img-wrap {
+  width: 100%;
+  height: 110px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
+  background: #F8F0E8;
+}
+
+.food-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s;
+}
+
+.dish-card:active .food-img { transform: scale(1.08); }
+
+.food-img-fallback {
+  display: none;
+  font-size: 52px;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
 }
 
 .dish-name {
@@ -957,55 +988,57 @@ body, .cat-btn, .modal, .dish-modal, .order-detail {
 </div>
 
 <script>
+const U = (id) => `https://images.unsplash.com/photo-${id}?w=200&h=200&fit=crop&q=80&auto=format`;
+
 const DISHES = [
   // 健身餐
-  { id: 1,  name: '香煎鸡胸肉',     emoji: '🍗', price: 22, cat: '健身餐' },
-  { id: 2,  name: '藜麦牛油果沙拉', emoji: '🥑', price: 28, cat: '健身餐' },
-  { id: 3,  name: '清蒸鲈鱼',       emoji: '🐟', price: 30, cat: '健身餐' },
-  { id: 4,  name: '水煮西兰花',     emoji: '🥦', price: 10, cat: '健身餐' },
-  { id: 5,  name: '蒸紫薯',         emoji: '🍠', price: 8,  cat: '健身餐' },
-  { id: 6,  name: '隔夜燕麦杯',     emoji: '🥣', price: 15, cat: '健身餐' },
-  { id: 7,  name: '牛肉蔬菜沙拉',   emoji: '🥗', price: 30, cat: '健身餐' },
-  { id: 8,  name: '全麦鸡肉三明治', emoji: '🥪', price: 20, cat: '健身餐' },
-  { id: 9,  name: '蛋白香蕉奶昔',   emoji: '🥤', price: 16, cat: '健身餐' },
+  { id: 1,  name: '香煎鸡胸肉',     img: U('1604503468506-a8da33b2b72b'), emoji: '🍗', price: 22, cat: '健身餐' },
+  { id: 2,  name: '藜麦牛油果沙拉', img: U('1512621774589-d08b91835f48'), emoji: '🥑', price: 28, cat: '健身餐' },
+  { id: 3,  name: '清蒸鲈鱼',       img: U('1534604973900-c43ab4c2e0ab'), emoji: '🐟', price: 30, cat: '健身餐' },
+  { id: 4,  name: '水煮西兰花',     img: U('1584270354949-c26b0ac0b7c5'), emoji: '🥦', price: 10, cat: '健身餐' },
+  { id: 5,  name: '蒸紫薯',         img: U('1596097635174-b28327b4dd9e'), emoji: '🍠', price: 8,  cat: '健身餐' },
+  { id: 6,  name: '隔夜燕麦杯',     img: U('1626200419199-391ae5c5549a'), emoji: '🥣', price: 15, cat: '健身餐' },
+  { id: 7,  name: '牛肉蔬菜沙拉',   img: U('1540189549336-e6e99c3679fe'), emoji: '🥗', price: 30, cat: '健身餐' },
+  { id: 8,  name: '全麦鸡肉三明治', img: U('1528735602780-8552ca20746b'), emoji: '🥪', price: 20, cat: '健身餐' },
+  { id: 9,  name: '蛋白香蕉奶昔',   img: U('1572490335270-0e5d5be50a56'), emoji: '🥤', price: 16, cat: '健身餐' },
   // 主食
-  { id: 10, name: '白米饭',         emoji: '🍚', price: 2,  cat: '主食' },
-  { id: 11, name: '蛋炒饭',         emoji: '🍳', price: 12, cat: '主食' },
-  { id: 12, name: '葱油拌面',       emoji: '🍜', price: 10, cat: '主食' },
-  { id: 13, name: '手工水饺',       emoji: '🥟', price: 18, cat: '主食' },
-  { id: 14, name: '番茄鸡蛋面',     emoji: '🍝', price: 15, cat: '主食' },
+  { id: 10, name: '白米饭',         img: U('1536304993881-ff6e9eefa2a6'), emoji: '🍚', price: 2,  cat: '主食' },
+  { id: 11, name: '蛋炒饭',         img: U('1603133872878-684f208fb84b'), emoji: '🍳', price: 12, cat: '主食' },
+  { id: 12, name: '葱油拌面',       img: U('1555126634-323283e090fa'), emoji: '🍜', price: 10, cat: '主食' },
+  { id: 13, name: '手工水饺',       img: U('1496116218417-1a781b1c416c'), emoji: '🥟', price: 18, cat: '主食' },
+  { id: 14, name: '番茄鸡蛋面',     img: U('1569718212165-3a88f1e67b0f'), emoji: '🍝', price: 15, cat: '主食' },
   // 热菜
-  { id: 15, name: '番茄炒蛋',       emoji: '🍅', price: 16, cat: '热菜' },
-  { id: 16, name: '红烧肉',         emoji: '🍖', price: 32, cat: '热菜' },
-  { id: 17, name: '糖醋排骨',       emoji: '🦴', price: 35, cat: '热菜' },
-  { id: 18, name: '鱼香肉丝',       emoji: '🥩', price: 22, cat: '热菜' },
-  { id: 19, name: '麻婆豆腐',       emoji: '🫘', price: 15, cat: '热菜' },
-  { id: 20, name: '地三鲜',         emoji: '🥔', price: 18, cat: '热菜' },
-  { id: 21, name: '蒜蓉西兰花',     emoji: '🥦', price: 14, cat: '热菜' },
-  { id: 22, name: '宫保鸡丁',       emoji: '🐔', price: 24, cat: '热菜' },
-  { id: 23, name: '干煸四季豆',     emoji: '🫛', price: 16, cat: '热菜' },
-  { id: 24, name: '回锅肉',         emoji: '🥓', price: 26, cat: '热菜' },
+  { id: 15, name: '番茄炒蛋',       img: U('1601316407642-a5a4b5e2f7a5'), emoji: '🍅', price: 16, cat: '热菜' },
+  { id: 16, name: '红烧肉',         img: U('1623681654710-9acaa6a665a9'), emoji: '🍖', price: 32, cat: '热菜' },
+  { id: 17, name: '糖醋排骨',       img: U('1544025162-d76694265947'), emoji: '🦴', price: 35, cat: '热菜' },
+  { id: 18, name: '鱼香肉丝',       img: U('1598251600118-56e4ad310760'), emoji: '🥩', price: 22, cat: '热菜' },
+  { id: 19, name: '麻婆豆腐',       img: U('1582452911148-c3a6ca0cbcc0'), emoji: '🫘', price: 15, cat: '热菜' },
+  { id: 20, name: '地三鲜',         img: U('1546069901-ba9599a7e63c'), emoji: '🥔', price: 18, cat: '热菜' },
+  { id: 21, name: '蒜蓉西兰花',     img: U('1457530378978-8bac673b8062'), emoji: '🥦', price: 14, cat: '热菜' },
+  { id: 22, name: '宫保鸡丁',       img: U('1525755662778-989d0524087e'), emoji: '🐔', price: 24, cat: '热菜' },
+  { id: 23, name: '干煸四季豆',     img: U('1564096280248-2f0f6e37be55'), emoji: '🫛', price: 16, cat: '热菜' },
+  { id: 24, name: '回锅肉',         img: U('1617196034796-73dfa7b2dc56'), emoji: '🥓', price: 26, cat: '热菜' },
   // 汤品
-  { id: 25, name: '紫菜蛋花汤',     emoji: '🥚', price: 8,  cat: '汤品' },
-  { id: 26, name: '番茄蛋汤',       emoji: '🍲', price: 10, cat: '汤品' },
-  { id: 27, name: '酸辣汤',         emoji: '🌶️', price: 12, cat: '汤品' },
+  { id: 25, name: '紫菜蛋花汤',     img: U('1547592166-23c2632e345a'), emoji: '🥚', price: 8,  cat: '汤品' },
+  { id: 26, name: '番茄蛋汤',       img: U('1605532286497-38c204b2d20e'), emoji: '🍲', price: 10, cat: '汤品' },
+  { id: 27, name: '酸辣汤',         img: U('1576560754882-31c4b0af5b64'), emoji: '🌶️', price: 12, cat: '汤品' },
   // 饮品
-  { id: 28, name: '冰美式',         emoji: '🧊', price: 12, cat: '饮品' },
-  { id: 29, name: '拿铁',           emoji: '🥛', price: 16, cat: '饮品' },
-  { id: 30, name: '手冲咖啡',       emoji: '☕', price: 20, cat: '饮品' },
-  { id: 31, name: '冰镇酸梅汤',     emoji: '🫗', price: 6,  cat: '饮品' },
-  { id: 32, name: '热豆浆',         emoji: '🫘', price: 5,  cat: '饮品' },
-  { id: 33, name: '柠檬水',         emoji: '🍋', price: 4,  cat: '饮品' },
+  { id: 28, name: '冰美式',         img: U('1461023058943-07fcbe16d735'), emoji: '🧊', price: 12, cat: '饮品' },
+  { id: 29, name: '拿铁',           img: U('1572442387798-5a2c0e93f1b5'), emoji: '🥛', price: 16, cat: '饮品' },
+  { id: 30, name: '手冲咖啡',       img: U('1495474472287-4d71bcdd2085'), emoji: '☕', price: 20, cat: '饮品' },
+  { id: 31, name: '冰镇酸梅汤',     img: U('1544145945-f90425340b7a'), emoji: '🫗', price: 6,  cat: '饮品' },
+  { id: 32, name: '热豆浆',         img: U('1556905200-8f3393b12b18'), emoji: '🫘', price: 5,  cat: '饮品' },
+  { id: 33, name: '柠檬水',         img: U('1621263764928-df1444c5e859'), emoji: '🍋', price: 4,  cat: '饮品' },
 ];
 
 // VIP hidden dishes
 const HIDDEN_DISHES = [
-  { id: 90, name: '红烧牛腩煲',     emoji: '🍲', price: 48, cat: '隐藏菜单', vip: true },
-  { id: 91, name: '蒜蓉粉丝蒸虾',   emoji: '🦐', price: 52, cat: '隐藏菜单', vip: true },
-  { id: 92, name: '黑椒牛排',       emoji: '🥩', price: 68, cat: '隐藏菜单', vip: true },
-  { id: 93, name: '三文鱼刺身',     emoji: '🍣', price: 58, cat: '隐藏菜单', vip: true },
-  { id: 94, name: '芝士焗龙虾',     emoji: '🦞', price: 88, cat: '隐藏菜单', vip: true },
-  { id: 95, name: '佛跳墙',         emoji: '🍯', price: 98, cat: '隐藏菜单', vip: true },
+  { id: 90, name: '红烧牛腩煲',     img: U('1574484284002-952d92456975'), emoji: '🍲', price: 48, cat: '隐藏菜单', vip: true },
+  { id: 91, name: '蒜蓉粉丝蒸虾',   img: U('1559741858-68507efaac4b'), emoji: '🦐', price: 52, cat: '隐藏菜单', vip: true },
+  { id: 92, name: '黑椒牛排',       img: U('1546833998-8774c511bf13'), emoji: '🥩', price: 68, cat: '隐藏菜单', vip: true },
+  { id: 93, name: '三文鱼刺身',     img: U('1579584425555-c3ce17fd4359'), emoji: '🍣', price: 58, cat: '隐藏菜单', vip: true },
+  { id: 94, name: '芝士焗龙虾',     img: U('1553246649036-d0f8e7e007e8'), emoji: '🦞', price: 88, cat: '隐藏菜单', vip: true },
+  { id: 95, name: '佛跳墙',         img: U('1544025162-d76694265947'), emoji: '🍯', price: 98, cat: '隐藏菜单', vip: true },
 ];
 
 const CATS = ['全部', '健身餐', '主食', '热菜', '汤品', '饮品'];
@@ -1063,10 +1096,13 @@ function render() {
     } else {
       priceHtml = `<div class="dish-price">${price}</div>`;
     }
+    const imgHtml = d.img
+      ? `<div class="food-img-wrap"><img class="food-img" src="${d.img}" alt="${d.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="food-img-fallback">${d.emoji}</span></div>`
+      : `<span class="dish-emoji">${d.emoji}</span>`;
     return `
       <div class="dish-card${hasNote ? ' has-note' : ''}${isHidden ? ' vip-only' : ''}" onclick="openDishModal(${d.id})">
         <span class="has-note-dot" title="已加备注"></span>
-        <span class="dish-emoji">${d.emoji}</span>
+        ${imgHtml}
         <div class="dish-name">${d.name}</div>
         ${priceHtml}
       </div>
@@ -1092,10 +1128,14 @@ function openDishModal(dishId) {
     ? `<div class="big-price" style="text-decoration:line-through;color:#C4A882;font-size:14px;margin-bottom:0">¥${d.price}</div><div class="big-price" style="margin-top:0">¥${price} <span style="font-size:13px;color:#FFA500">(6折)</span></div>`
     : `<div class="big-price">¥${d.price}</div>`;
 
+  const bigImgHtml = d.img
+    ? `<div style="width:120px;height:120px;border-radius:16px;overflow:hidden;margin:0 auto 12px"><img src="${d.img}" alt="${d.name}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span style="display:none;font-size:52px;width:100%;height:100%;align-items:center;justify-content:center">${d.emoji}</span></div>`
+    : `<span class="big-emoji">${d.emoji}</span>`;
+
   const html = `
     <div class="dish-modal-overlay" id="dishModalOverlay" onclick="if(event.target===this)closeDishModal()">
       <div class="dish-modal">
-        <span class="big-emoji">${d.emoji}</span>
+        ${bigImgHtml}
         <div class="big-name">${d.name}${d.vip ? ' <span class="vip-tag">👑VIP</span>' : ''}</div>
         ${priceHtml}
         <input class="note-input" id="dishNote" placeholder="💬 添加备注（比如：少油、加辣...）" value="${escapeHtml(note)}" autocomplete="off">
