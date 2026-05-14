@@ -560,24 +560,123 @@ h1 {
 
 .submit-order-btn:active { transform: scale(0.97); }
 
-/* ── Success ── */
-.success-toast {
+/* ── Order Detail Modal ── */
+.order-detail-overlay {
   position: fixed;
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: white;
-  border-radius: var(--radius);
-  padding: 32px 28px;
-  text-align: center;
-  box-shadow: 0 8px 40px rgba(93, 58, 26, 0.2);
+  inset: 0;
+  background: rgba(93, 58, 26, 0.4);
   z-index: 300;
-  animation: popIn 0.4s ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s;
 }
 
-.success-emoji { font-size: 64px; display: block; margin-bottom: 12px; }
-.success-text { font-size: 18px; color: var(--brown); }
-.success-sub { font-size: 13px; color: #C4A882; margin-top: 4px; }
+.order-detail {
+  background: white;
+  border-radius: var(--radius);
+  width: 92%;
+  max-width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 28px 22px 24px;
+  animation: popIn 0.4s ease-out;
+  box-shadow: 0 12px 48px rgba(93, 58, 26, 0.2);
+}
+
+.order-detail-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.order-detail-header .od-emoji { font-size: 48px; display: block; margin-bottom: 6px; }
+.order-detail-header .od-title { font-size: 20px; color: var(--deep-pink); }
+.order-detail-header .od-time { font-size: 12px; color: #C4A882; margin-top: 4px; }
+
+.order-detail-list {
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.od-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px dashed #ECDDD0;
+  font-size: 14px;
+}
+.od-item:last-child { border-bottom: none; }
+
+.od-item-emoji { font-size: 24px; flex-shrink: 0; }
+.od-item-info { flex: 1; }
+.od-item-name { color: var(--dark-brown); }
+.od-item-note { font-size: 11px; color: var(--pink); }
+.od-item-right { text-align: right; flex-shrink: 0; }
+.od-item-qty { color: var(--brown); font-size: 13px; }
+.od-item-price { color: var(--deep-pink); font-weight: bold; }
+
+.order-detail-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0 16px;
+  font-size: 20px;
+  color: var(--dark-brown);
+}
+.order-detail-total strong { color: var(--deep-pink); font-size: 24px; }
+
+.od-note-row {
+  display: flex;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--brown);
+  padding: 8px 14px;
+  background: var(--cream);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+
+.od-btn-row { display: flex; gap: 10px; }
+
+.od-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 50px;
+  font-family: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.od-btn-copy {
+  background: var(--deep-pink);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 16px rgba(255,107,107,0.25);
+}
+.od-btn-copy:active { transform: scale(0.97); }
+
+.od-btn-close {
+  background: transparent;
+  color: var(--brown);
+  border: 2px solid var(--pink);
+}
+.od-btn-close:active { background: #FFF0ED; }
+
+.od-copied-hint {
+  text-align: center;
+  font-size: 12px;
+  color: var(--deep-pink);
+  margin-top: 8px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.od-copied-hint.show { opacity: 1; }
 
 /* ── Responsive ── */
 @media (min-width: 768px) {
@@ -869,22 +968,69 @@ function submitOrder() {
 
   closeModal();
 
-  const toast = document.createElement('div');
-  toast.className = 'success-toast';
-  toast.innerHTML = `
-    <span class="success-emoji">✨🐷✨</span>
-    <div class="success-text">下单成功！哼哼~ 💖</div>
-    <div class="success-sub">快去告诉做饭的人吧！</div>
+  // Build order detail HTML
+  const detailItems = items.map(i => `
+    <div class="od-item">
+      <span class="od-item-emoji">${i.emoji}</span>
+      <div class="od-item-info">
+        <div class="od-item-name">${i.name}</div>
+        ${i.note ? '<div class="od-item-note">💬 ' + escapeHtml(i.note) + '</div>' : ''}
+      </div>
+      <div class="od-item-right">
+        <div class="od-item-qty">×${i.qty}</div>
+        <div class="od-item-price">¥${i.price * i.qty}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const overlay = document.createElement('div');
+  overlay.className = 'order-detail-overlay';
+  overlay.id = 'orderDetailOverlay';
+  overlay.innerHTML = `
+    <div class="order-detail">
+      <div class="order-detail-header">
+        <span class="od-emoji">✨🐷✨</span>
+        <div class="od-title">下单成功！哼哼~ 💖</div>
+        <div class="od-time">🕐 ${new Date().toLocaleString('zh-CN')}</div>
+      </div>
+      <div style="font-size:14px;color:var(--brown);margin-bottom:8px;">👤 ${escapeHtml(name)}</div>
+      <div class="order-detail-list">${detailItems}</div>
+      <div class="order-detail-total">
+        <span>合计</span>
+        <strong>¥${total}</strong>
+      </div>
+      ${note !== '无' ? '<div class="od-note-row">💬 备注：' + escapeHtml(note) + '</div>' : ''}
+      <div class="od-btn-row">
+        <button class="od-btn od-btn-copy" onclick="copyOrder()">📋 复制订单</button>
+        <button class="od-btn od-btn-close" onclick="closeOrderDetail()">关闭</button>
+      </div>
+      <div class="od-copied-hint" id="odCopiedHint">已复制到剪贴板！</div>
+    </div>
   `;
-  document.body.appendChild(toast);
+  document.body.appendChild(overlay);
 
+  // Store order text for copy button
+  overlay._orderText = orderText;
+
+  // Auto-copy to clipboard
   navigator.clipboard.writeText(orderText).catch(() => {});
-
-  setTimeout(() => { toast.remove(); }, 2000);
 
   cart = {};
   updateCartUI();
   render();
+}
+
+function copyOrder() {
+  const overlay = document.getElementById('orderDetailOverlay');
+  if (overlay && overlay._orderText) {
+    navigator.clipboard.writeText(overlay._orderText).catch(() => {});
+  }
+  const hint = document.getElementById('odCopiedHint');
+  if (hint) { hint.classList.add('show'); setTimeout(() => hint.classList.remove('show'), 1500); }
+}
+
+function closeOrderDetail() {
+  document.getElementById('orderDetailOverlay')?.remove();
 }
 
 render();
