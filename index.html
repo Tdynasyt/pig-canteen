@@ -678,6 +678,115 @@ h1 {
 }
 .od-copied-hint.show { opacity: 1; }
 
+/* ── VIP ── */
+.vip-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #5D3A1A;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 50px;
+  margin-left: 8px;
+  vertical-align: middle;
+  letter-spacing: 1px;
+  animation: vipGlow 1.5s ease-in-out infinite;
+}
+
+@keyframes vipGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(255,215,0,0.4); }
+  50% { box-shadow: 0 0 18px rgba(255,215,0,0.7); }
+}
+
+.dish-card.vip-only {
+  border-color: #FFD700;
+  background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,248,220,0.9));
+}
+
+.dish-card.vip-only::before {
+  content: '👑';
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  font-size: 14px;
+  z-index: 2;
+}
+
+.vip-price-original {
+  text-decoration: line-through;
+  color: #C4A882;
+  font-size: 12px;
+  margin-right: 4px;
+}
+
+.vip-tag {
+  display: inline-block;
+  background: #FFD700;
+  color: #5D3A1A;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 50px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.vip-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #C4A882;
+  margin-bottom: 4px;
+}
+
+.vip-welcome-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(93, 58, 26, 0.5);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s;
+}
+
+.vip-welcome {
+  background: white;
+  border-radius: var(--radius);
+  width: 90%;
+  max-width: 340px;
+  padding: 32px 24px 24px;
+  text-align: center;
+  animation: popIn 0.5s ease-out;
+  box-shadow: 0 12px 48px rgba(93, 58, 26, 0.3);
+  border: 3px solid #FFD700;
+}
+
+.vip-welcome-emoji { font-size: 72px; display: block; margin-bottom: 12px; }
+.vip-welcome-title { font-size: 22px; color: #DAA520; margin-bottom: 6px; }
+.vip-welcome-desc { font-size: 14px; color: var(--brown); margin-bottom: 4px; }
+.vip-welcome-sub { font-size: 12px; color: #C4A882; margin-bottom: 20px; }
+.vip-welcome-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #5D3A1A;
+  border: none;
+  border-radius: 50px;
+  font-family: inherit;
+  font-size: 18px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  transition: all 0.2s;
+}
+.vip-welcome-btn:active { transform: scale(0.97); opacity: 0.85; }
+
+/* VIP dish price display */
+.vip-price-row { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.vip-price-row .current { color: var(--deep-pink); font-size: 18px; }
+.vip-price-row .current::before { content: '¥'; font-size: 12px; }
+.vip-price-row .original { color: #C4A882; font-size: 12px; text-decoration: line-through; }
+.vip-price-row .discount { color: #FFA500; font-size: 11px; }
+
 /* ── Responsive ── */
 @media (min-width: 768px) {
   .menu-grid { grid-template-columns: repeat(4, 1fr); max-width: 960px; margin: 0 auto; }
@@ -694,9 +803,9 @@ h1 {
 <span class="float-emoji d">🐷</span>
 
 <header>
-  <span class="logo">✨🐷✨</span>
-  <h1>猪人食堂</h1>
-  <p class="subtitle">今天吃啥？哼哼~ 💖</p>
+  <span class="logo" id="logoEl">✨🐷✨</span>
+  <h1>猪人食堂<span class="vip-badge" id="vipBadge" style="display:none">👑 VIP</span></h1>
+  <p class="subtitle" id="subtitleEl" title="点击有惊喜">今天吃啥？哼哼~ 💖</p>
   <div class="doodle-divider">🐷 ✨ 🐽 ✨ 🐷</div>
 </header>
 
@@ -753,7 +862,37 @@ const DISHES = [
   { id: 33, name: '柠檬水',         emoji: '🍋', price: 4,  cat: '饮品' },
 ];
 
+// VIP hidden dishes
+const HIDDEN_DISHES = [
+  { id: 90, name: '红烧牛腩煲',     emoji: '🍲', price: 48, cat: '隐藏菜单', vip: true },
+  { id: 91, name: '蒜蓉粉丝蒸虾',   emoji: '🦐', price: 52, cat: '隐藏菜单', vip: true },
+  { id: 92, name: '黑椒牛排',       emoji: '🥩', price: 68, cat: '隐藏菜单', vip: true },
+  { id: 93, name: '三文鱼刺身',     emoji: '🍣', price: 58, cat: '隐藏菜单', vip: true },
+  { id: 94, name: '芝士焗龙虾',     emoji: '🦞', price: 88, cat: '隐藏菜单', vip: true },
+  { id: 95, name: '佛跳墙',         emoji: '🍯', price: 98, cat: '隐藏菜单', vip: true },
+];
+
 const CATS = ['全部', '健身餐', '主食', '热菜', '汤品', '饮品'];
+const VIP_CATS = ['全部', '健身餐', '主食', '热菜', '汤品', '饮品', '隐藏菜单'];
+
+// VIP
+const VIP_KEY = 'zc_vip';
+const VIP_DISCOUNT = 0.6; // 6折
+let isVip = localStorage.getItem(VIP_KEY) === '1';
+let vipWelcomeShown = false;
+
+function getAllDishes() {
+  return isVip ? [...DISHES, ...HIDDEN_DISHES] : DISHES;
+}
+
+function getCats() {
+  return isVip ? VIP_CATS : CATS;
+}
+
+function getPrice(price) {
+  return isVip ? Math.round(price * VIP_DISCOUNT) : price;
+}
+
 let activeCat = '全部';
 let cart = {};
 
@@ -763,47 +902,66 @@ const cartCount = document.getElementById('cartCount');
 const cartTotal = document.getElementById('cartTotal');
 const checkoutBtn = document.getElementById('checkoutBtn');
 
-CATS.forEach(c => {
-  const btn = document.createElement('button');
-  btn.className = 'cat-btn' + (c === activeCat ? ' active' : '');
-  btn.textContent = c;
-  btn.onclick = () => { activeCat = c; render(); };
-  catEl.appendChild(btn);
-});
+function renderCategories() {
+  catEl.innerHTML = '';
+  getCats().forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn' + (c === activeCat ? ' active' : '');
+    btn.textContent = c;
+    if (c === '隐藏菜单') { btn.innerHTML = '👑 ' + c; }
+    btn.onclick = () => { activeCat = c; render(); };
+    catEl.appendChild(btn);
+  });
+}
 
 function render() {
-  const filtered = activeCat === '全部' ? DISHES : DISHES.filter(d => d.cat === activeCat);
+  const allDishes = getAllDishes();
+  const filtered = activeCat === '全部' ? allDishes : allDishes.filter(d => d.cat === activeCat);
   gridEl.innerHTML = filtered.map(d => {
     const hasNote = cart[d.id] && cart[d.id].note;
+    const price = getPrice(d.price);
+    const isHidden = d.vip;
+    let priceHtml;
+    if (isVip && d.price !== price) {
+      priceHtml = `<div class="vip-price-row"><span class="original">¥${d.price}</span><span class="current">${price}</span><span class="discount">6折</span></div>`;
+    } else {
+      priceHtml = `<div class="dish-price">${price}</div>`;
+    }
     return `
-      <div class="dish-card${hasNote ? ' has-note' : ''}" onclick="openDishModal(${d.id})">
+      <div class="dish-card${hasNote ? ' has-note' : ''}${isHidden ? ' vip-only' : ''}" onclick="openDishModal(${d.id})">
         <span class="has-note-dot" title="已加备注"></span>
         <span class="dish-emoji">${d.emoji}</span>
         <div class="dish-name">${d.name}</div>
-        <div class="dish-price">${d.price}</div>
+        ${priceHtml}
       </div>
     `;
   }).join('');
 
   document.querySelectorAll('.cat-btn').forEach(b => {
-    b.classList.toggle('active', b.textContent === activeCat);
+    const btnText = b.textContent.replace('👑 ', '');
+    b.classList.toggle('active', btnText === activeCat);
   });
   updateCartUI();
 }
 
 // ── Dish Note Modal ──
 function openDishModal(dishId) {
-  const d = DISHES.find(x => x.id === dishId);
+  const allDishes = getAllDishes();
+  const d = allDishes.find(x => x.id === dishId);
   const existing = cart[dishId];
   const qty = existing ? existing.qty : 1;
   const note = existing ? existing.note : '';
+  const price = getPrice(d.price);
+  const priceHtml = (isVip && d.price !== price)
+    ? `<div class="big-price" style="text-decoration:line-through;color:#C4A882;font-size:14px;margin-bottom:0">¥${d.price}</div><div class="big-price" style="margin-top:0">¥${price} <span style="font-size:13px;color:#FFA500">(6折)</span></div>`
+    : `<div class="big-price">¥${d.price}</div>`;
 
   const html = `
     <div class="dish-modal-overlay" id="dishModalOverlay" onclick="if(event.target===this)closeDishModal()">
       <div class="dish-modal">
         <span class="big-emoji">${d.emoji}</span>
-        <div class="big-name">${d.name}</div>
-        <div class="big-price">¥${d.price}</div>
+        <div class="big-name">${d.name}${d.vip ? ' <span class="vip-tag">👑VIP</span>' : ''}</div>
+        ${priceHtml}
         <input class="note-input" id="dishNote" placeholder="💬 添加备注（比如：少油、加辣...）" value="${escapeHtml(note)}" autocomplete="off">
         <div class="qty-row">
           <button class="qty-btn-lg" onclick="changeDishQty(-1)">−</button>
@@ -858,14 +1016,16 @@ function confirmAddToCart(dishId) {
 function removeCartItem(dishId) { delete cart[dishId]; updateCartUI(); render(); }
 
 function getCartItems() {
+  const allDishes = getAllDishes();
   return Object.entries(cart).map(([id, info]) => {
-    const d = DISHES.find(x => x.id === +id);
+    const d = allDishes.find(x => x.id === +id);
     if (!d) return null;
-    return { ...d, qty: info.qty, note: info.note };
+    return { ...d, qty: info.qty, note: info.note, vipPrice: getPrice(d.price) };
   }).filter(Boolean);
 }
 
-function getTotal() { return getCartItems().reduce((sum, item) => sum + item.price * item.qty, 0); }
+function getTotal() { return getCartItems().reduce((sum, item) => sum + item.vipPrice * item.qty, 0); }
+function getTotalOriginal() { return getCartItems().reduce((sum, item) => sum + item.price * item.qty, 0); }
 function getTotalCount() { return Object.values(cart).reduce((s, info) => s + info.qty, 0); }
 
 function updateCartUI() {
@@ -895,8 +1055,8 @@ checkoutBtn.addEventListener('click', () => {
       <div class="cart-item">
         <div class="cart-item-main">
           <span style="font-size:28px">${item.emoji}</span>
-          <span class="cart-item-name">${item.name}</span>
-          <span class="cart-item-price">¥${item.price * item.qty}</span>
+          <span class="cart-item-name">${item.name}${item.vip ? ' <span class="vip-tag">👑</span>' : ''}</span>
+          <span class="cart-item-price">¥${item.vipPrice * item.qty}</span>
           <div class="qty-control">
             <button class="qty-btn" onclick="event.stopPropagation();modCartQty(${item.id},-1);refreshModal()">−</button>
             <span class="qty-num">${item.qty}</span>
@@ -908,9 +1068,16 @@ checkoutBtn.addEventListener('click', () => {
     `;
   });
 
+  const total = getTotal();
+  const totalOriginal = getTotalOriginal();
+  const vipDiscountHtml = (isVip && totalOriginal > total)
+    ? `<div class="vip-total-row"><span>原价</span><span style="text-decoration:line-through">¥${totalOriginal}</span></div><div class="vip-total-row"><span>👑 VIP 6折</span><span>-¥${totalOriginal - total}</span></div>`
+    : '';
+
   html += `
-        <div style="text-align:right;padding:16px 0;font-size:20px;color:var(--dark-brown)">
-          合计：<strong style="color:var(--deep-pink)">¥${getTotal()}</strong>
+        ${vipDiscountHtml}
+        <div style="text-align:right;padding:${vipDiscountHtml ? '4px' : '16px'} 0 16px;font-size:20px;color:var(--dark-brown)">
+          合计：<strong style="color:var(--deep-pink)">¥${total}</strong>
         </div>
         <div class="form-group">
           <label>👤 你的名字</label>
@@ -948,19 +1115,21 @@ function submitOrder() {
   const note = document.getElementById('orderNote').value.trim() || '无';
   const items = getCartItems();
   const total = getTotal();
+  const totalOriginal = getTotalOriginal();
+  const vipLabel = (isVip && totalOriginal > total) ? ' 👑VIP 6折' : '';
 
   const lines = items.map(i => {
-    let line = `  ${i.emoji} ${i.name} ×${i.qty}  ¥${i.price * i.qty}`;
+    let line = `  ${i.emoji} ${i.name} ×${i.qty}  ¥${i.vipPrice * i.qty}`;
     if (i.note) line += `  [${i.note}]`;
     return line;
   });
 
-  const orderText = `✨🐷✨ 猪人食堂 · 新订单！
+  const orderText = `✨🐷✨ 猪人食堂 · 新订单！${vipLabel}
 ━━━━━━━━━━━━━━
 👤 ${name}
 📋 ${lines.join('\n')}
 ━━━━━━━━━━━━━━
-💰 合计：¥${total}
+💰 合计：¥${total}${vipLabel ? ' (原价 ¥' + totalOriginal + ')' : ''}
 📝 备注：${note}
 🕐 ${new Date().toLocaleString('zh-CN')}
 
@@ -973,15 +1142,19 @@ function submitOrder() {
     <div class="od-item">
       <span class="od-item-emoji">${i.emoji}</span>
       <div class="od-item-info">
-        <div class="od-item-name">${i.name}</div>
+        <div class="od-item-name">${i.name}${i.vip ? ' <span class="vip-tag">👑</span>' : ''}</div>
         ${i.note ? '<div class="od-item-note">💬 ' + escapeHtml(i.note) + '</div>' : ''}
       </div>
       <div class="od-item-right">
         <div class="od-item-qty">×${i.qty}</div>
-        <div class="od-item-price">¥${i.price * i.qty}</div>
+        <div class="od-item-price">¥${i.vipPrice * i.qty}</div>
       </div>
     </div>
   `).join('');
+
+  const vipDiscountDetail = (isVip && totalOriginal > total)
+    ? `<div class="vip-total-row"><span>原价</span><span style="text-decoration:line-through">¥${totalOriginal}</span></div><div class="vip-total-row"><span>👑 VIP 6折优惠</span><span style="color:#FFA500">-¥${totalOriginal - total}</span></div>`
+    : '';
 
   const overlay = document.createElement('div');
   overlay.className = 'order-detail-overlay';
@@ -989,12 +1162,13 @@ function submitOrder() {
   overlay.innerHTML = `
     <div class="order-detail">
       <div class="order-detail-header">
-        <span class="od-emoji">✨🐷✨</span>
-        <div class="od-title">下单成功！哼哼~ 💖</div>
+        <span class="od-emoji">${isVip && totalOriginal > total ? '👑✨🐷✨👑' : '✨🐷✨'}</span>
+        <div class="od-title">${isVip && totalOriginal > total ? 'VIP下单成功！👑' : '下单成功！哼哼~ 💖'}</div>
         <div class="od-time">🕐 ${new Date().toLocaleString('zh-CN')}</div>
       </div>
       <div style="font-size:14px;color:var(--brown);margin-bottom:8px;">👤 ${escapeHtml(name)}</div>
       <div class="order-detail-list">${detailItems}</div>
+      ${vipDiscountDetail}
       <div class="order-detail-total">
         <span>合计</span>
         <strong>¥${total}</strong>
@@ -1033,6 +1207,70 @@ function closeOrderDetail() {
   document.getElementById('orderDetailOverlay')?.remove();
 }
 
+// ── VIP Activation ──
+let tapCount = 0;
+let tapTimer = null;
+
+document.getElementById('subtitleEl').addEventListener('click', () => {
+  tapCount++;
+  clearTimeout(tapTimer);
+  tapTimer = setTimeout(() => { tapCount = 0; }, 3000);
+  if (tapCount >= 8) {
+    tapCount = 0;
+    if (!isVip) { activateVip(); } else { deactivateVip(); }
+  }
+});
+
+function activateVip() {
+  localStorage.setItem(VIP_KEY, '1');
+  isVip = true;
+  document.getElementById('vipBadge').style.display = 'inline-block';
+  showVipWelcome();
+  renderCategories();
+  render();
+}
+
+function deactivateVip() {
+  if (confirm('确定要取消 VIP 吗？')) {
+    localStorage.removeItem(VIP_KEY);
+    isVip = false;
+    document.getElementById('vipBadge').style.display = 'none';
+    renderCategories();
+    render();
+  }
+}
+
+function showVipWelcome() {
+  const overlay = document.createElement('div');
+  overlay.className = 'vip-welcome-overlay';
+  overlay.id = 'vipWelcomeOverlay';
+  overlay.onclick = function(e) { if (e.target === this) closeVipWelcome(); };
+  overlay.innerHTML = `
+    <div class="vip-welcome">
+      <span class="vip-welcome-emoji">👑🐷👑</span>
+      <div class="vip-welcome-title">恭喜！你是尊贵的VIP！</div>
+      <div class="vip-welcome-desc">🎉 全场菜品享 <strong>6折</strong> 优惠</div>
+      <div class="vip-welcome-sub">👑 解锁「隐藏菜单」专属菜品</div>
+      <button class="vip-welcome-btn" onclick="closeVipWelcome()">🐷 开始点餐！</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+function closeVipWelcome() {
+  document.getElementById('vipWelcomeOverlay')?.remove();
+}
+
+// ── VIP Init ──
+if (isVip) {
+  document.getElementById('vipBadge').style.display = 'inline-block';
+  if (!sessionStorage.getItem('vip_shown')) {
+    sessionStorage.setItem('vip_shown', '1');
+    setTimeout(showVipWelcome, 500);
+  }
+}
+
+renderCategories();
 render();
 </script>
 
